@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+		
+	<!-- HikariCP -->
+	<!-- https://github.com/brettwooldridge/HikariCP/wiki/HikariCP-Articles -->
+	<!-- https://examples.javacodegeeks.com/enterprise-java/hikaricp/hikaricp-connection-pooling-example/ -->
+<!-- 	<bean id="dataSourceHiKariConfig" class="com.zaxxer.hikari.HikariConfig">
+		<property name="driverClassName" value="oracle.jdbc.OracleDriver"/>
+		<property name="jdbcUrl" value="jdbc:oracle:thin:@localhost:1521:xe"/>
+		<property name="username" value="project"/>
+		<property name="password" value="project"/>
+	</bean>	  -->
+	
+	<bean id="dataSourceHiKariConfig" class="com.zaxxer.hikari.HikariConfig"
+			p:driverClassName="oracle.jdbc.OracleDriver"
+			p:jdbcUrl="jdbc:oracle:thin:@localhost:1521:xe"
+			p:username="project"
+			p:password="project" />
+	
+	<bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
+		<constructor-arg ref="dataSourceHiKariConfig" />
+	</bean>
+	
+	<!-- myBatis -->
+	<bean id="sqlSessionFactory"
+		  class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="typeAliasesPackage"
+			value="com.youngwun.project.domain" />
+		<property name="mapperLocations"
+			value="classpath:/mapper/*.xml" />
+		<property name="configuration">
+			<bean class="org.apache.ibatis.session.Configuration">
+				<property name="mapUnderscoreToCamelCase" value="true" />
+			</bean>
+		</property>
+		
+		<!-- MyBatis date format 문제 해결 -->
+		<property name="typeHandlersPackage" 
+			value="com.youngwun.project.typehandler" /> 
+	</bean>
+
+	<bean id="sqlSession"
+		  class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg name="sqlSessionFactory"
+					     ref="sqlSessionFactory" />
+	</bean>	
+	
+	<!-- MyBatis(transaction) -->
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+         <property name="dataSource" ref="dataSource" />
+    </bean>	
+    
+    <bean id="transactionTemplate"
+          class="org.springframework.transaction.support.TransactionTemplate">
+          <property name="transactionManager" ref="transactionManager"></property>
+   	</bean>
+    
+    <!-- @Transactional -->
+   	<tx:annotation-driven transaction-manager="transactionManager" />
+   	
+   	<!-- AOP ready -->
+    <aop:aspectj-autoproxy />
+    
+</beans>
